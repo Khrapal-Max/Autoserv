@@ -1,12 +1,24 @@
+using AutoservWebAPI.ExeptionFilters;
+using Infrastructure.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using System.Reflection;
+using System.Reflection; 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+var connectionString = builder.Configuration.GetConnectionString("AutoservIdentityConnectionDb");
+
+builder.Services.AddDbContext<AutoservIdentityContext>(options =>
+    options.UseSqlServer(connectionString)    
+    .UseSnakeCaseNamingConvention()
+    .EnableSensitiveDataLogging(true));
+
 builder.Services.AddControllers(o =>
                 o.Filters.Add(typeof(ExeptionFilter)));
+
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -14,7 +26,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "AlphaCRM.WebAPI",
+        Title = "AutoServ.CRM.WebAPI",
         Version = "v1",
         Contact = new OpenApiContact
         {
