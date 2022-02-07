@@ -1,3 +1,3 @@
 # autoserv
 
-Test DDD solution on RESTAPI. Maybe entity as aggregate.
+Test DDD solution on REST API. Maybe entity as aggregate.
