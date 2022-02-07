@@ -1,3 +1,4 @@
 # autoserv
 
-Test DDD solution on REST API. Maybe entity as aggregate.
+Test DDD solution on REST API. 
+WEB client on Angular.
