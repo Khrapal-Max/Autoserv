@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Identity
 {
-    public class AutoservIdentityContext : DbContext
+    public class AutoservIdentityContext : IdentityDbContext
     {
         public AutoservIdentityContext(DbContextOptions<AutoservIdentityContext> options) : base(options)
         { }
@@ -13,7 +14,6 @@ namespace Infrastructure.Identity
             //modelBuilder.Configure();
 
             // Seeding data using extension method
-            // NOTE: this method will be called every time after adding a new migration, cuz we use Bogus for seed data
             //modelBuilder.Seed();
         }
     }
