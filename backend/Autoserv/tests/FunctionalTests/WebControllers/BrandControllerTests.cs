@@ -1,6 +1,6 @@
 ﻿using ApplicationCore.ModelsDTO.Brand;
 using FunctionalTests.Extensions;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -14,18 +14,14 @@ namespace FunctionalTests.WebControllers
 
         private readonly HttpClient _client;
 
-        private readonly int _shift = 1;
+        private readonly int _count = 3;
 
         private readonly NewBrandDTO _newBrandDTO = new()
         {
             Name = "NewTestBrandDTO"
         };
 
-        private readonly BrandDTO _updatingBrand = new()
-        {
-            Id = 4,
-            Name = "Update"
-        };
+        private BrandDTO? _brandDTO;
 
         public BrandControllerTests(WebAppFactoryTest<Program> factory)
         {
@@ -33,7 +29,22 @@ namespace FunctionalTests.WebControllers
         }
 
         [Fact]
-        public async Task Create_Brand_Than_Checed_NewBrand_in_DB_Result_is_Positive()
+        public async Task Get_all_endpoint_return_items_given_valid()
+        {
+            //Arrange 
+            var actualResponse = await _client.GetAsync("/Brand");
+            actualResponse.EnsureSuccessStatusCode();
+
+            //Act
+            var actual = await JsonConverterExeptions.ReadListAsync<BrandDTO>(actualResponse);
+
+            //Assert
+            Assert.Equal(HttpStatusCode.OK, actualResponse.StatusCode);
+            Assert.Equal(_count, actual.Count);
+        }
+
+        [Fact]
+        public async Task Create_endpoint_return_item_given_valid()
         {
             //Arrange            
             var content = JsonContent.Create(_newBrandDTO);
@@ -55,13 +66,20 @@ namespace FunctionalTests.WebControllers
         }
 
         [Fact]
-        public async Task Creating_a_check_on_update_Brand_is_Positive()
+        public async Task Update_endpoint_returns_item_given_valid()
         {
             //Arrange     
-            var content = JsonContent.Create(_updatingBrand);
+            var brands = await _client.GetAsync("/Brand");
+            brands.EnsureSuccessStatusCode();
+
+            var allBrands = await JsonConverterExeptions.ReadListAsync<BrandDTO>(brands);
+            _brandDTO = allBrands.OrderByDescending(x => x.Id).FirstOrDefault()!;
+
+            _brandDTO.Name = "Update";
+            var content = JsonContent.Create(_brandDTO);
 
             //Act 
-            var expectedResponse = await _client.PutAsync("/Brand" + "/" + _updatingBrand.Id, content);
+            var expectedResponse = await _client.PutAsync("/Brand" + "/" + _brandDTO.Id, content);
             expectedResponse.EnsureSuccessStatusCode();
 
             var expected = await JsonConverterExeptions.ReadAsync<BrandDTO>(expectedResponse);
@@ -77,28 +95,24 @@ namespace FunctionalTests.WebControllers
         }
 
         [Fact]
-        public async Task Delete_Brand_Than_Checed_Count_in_DB_Result_is_Positive()
+        public async Task Delete_endpoint_returns_item_given_valid()
         {
             //Arrange
-            var expectedCount = await _client.GetAsync("/Brand");
-            expectedCount.EnsureSuccessStatusCode();
+            var brands = await _client.GetAsync("/Brand");
+            brands.EnsureSuccessStatusCode();
 
-            var brandsCountBefor = await JsonConverterExeptions.ReadListAsync<BrandDTO>(expectedCount);
+            var allBrands = await JsonConverterExeptions.ReadListAsync<BrandDTO>(brands);
+            _brandDTO = allBrands.OrderByDescending(x => x.Id).FirstOrDefault()!;
 
             //Act 
-            var expectedResponse = await _client.DeleteAsync("/Brand" + "/" + _updatingBrand.Id);
-            expectedResponse.EnsureSuccessStatusCode();
+            var actualResponse = await _client.DeleteAsync("/Brand" + "/" + _brandDTO.Id);
+            actualResponse.EnsureSuccessStatusCode();
 
-            var expected = await JsonConverterExeptions.ReadAsync<BrandDTO>(expectedResponse);
-
-            var actualCount = await _client.GetAsync("/Brand");
-            actualCount.EnsureSuccessStatusCode();
-
-            var brandsCountAfter = await JsonConverterExeptions.ReadListAsync<BrandDTO>(actualCount);
+            var actual = await JsonConverterExeptions.ReadAsync<BrandDTO>(actualResponse);
 
             //Assert
-            Assert.Null(expected);
-            Assert.Equal(brandsCountBefor.Count - _shift, brandsCountAfter.Count);
+            Assert.Equal(HttpStatusCode.NoContent, actualResponse.StatusCode);
+            Assert.Null(actual);
         }
     }
 }

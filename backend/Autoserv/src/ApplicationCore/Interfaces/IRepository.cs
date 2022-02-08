@@ -1,8 +1,6 @@
-﻿using ApplicationCore.Entities;
-
-namespace ApplicationCore.Interfaces
+﻿namespace ApplicationCore.Interfaces
 {
-    public interface IRepository<T> where T : class, IBaseEntity 
+    public interface IRepository<T> where T : class, IBaseEntity
     {
         Task<T> CreateAsync(T item);
         Task<IEnumerable<T>> GetAllAsync();

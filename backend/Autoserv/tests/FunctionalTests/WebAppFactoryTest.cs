@@ -1,24 +1,15 @@
-﻿using FunctionalTests.Data;
-using Infrastructure.Data;
-using Microsoft.AspNetCore.Builder;
+﻿using Infrastructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 
 namespace FunctionalTests
 {
-    public class WebAppFactoryTest<T> : WebApplicationFactory<Program> where T : Program
+    public class WebAppFactoryTest<TStartup> : WebApplicationFactory<TStartup> where TStartup : class
     {
-        private readonly string _connectionString;
-
-        public WebAppFactoryTest()
-        {
-            var builder = WebApplication.CreateBuilder();
-            _connectionString = builder.Configuration.GetConnectionString("AutoservConnectionTestDb");
-        }
+        private readonly string _connectionString = "Server=(localdb)\\MSSQLLocalDB;Integrated Security=true;Database=Autoserv_test_DB;Trusted_Connection=True;MultipleActiveResultSets=true;";
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -32,20 +23,19 @@ namespace FunctionalTests
                     s.Remove(descriptor);
                 }
 
-                s.AddDbContext<AutoservContext>(o =>
+                s.AddDbContext<AutoservContext>((options, context) =>
                 {
-                    o.UseSqlServer(_connectionString);
+                    context.UseSqlServer(_connectionString);
                 });
 
                 var sp = s.BuildServiceProvider();
+
                 using var scope = sp.CreateScope();
-                using var context = scope.ServiceProvider.GetRequiredService<AutoservContext>();
+                var scopedServices = scope.ServiceProvider;
+                var db = scopedServices.GetRequiredService<AutoservContext>();
 
-                context.Database.EnsureDeleted();
-                context.Database.EnsureCreated();               
-
-                var seed = new Seed();
-                context.CatalogBrands.AddRange(seed.Brands);
+                db.Database.EnsureDeleted();
+                db.Database.EnsureCreated();
             });
         }
     }
