@@ -6,6 +6,7 @@ using ApplicationCore.ModelsDTO.Brand;
 using ApplicationCore.Services;
 using AutoMapper;
 using AutoservWebAPI.ExeptionFilters;
+using Infrastructure.Data;
 using Infrastructure.Identity;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -19,6 +20,13 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+var connectionString = builder.Configuration.GetConnectionString("AutoservConnectionDb");
+
+builder.Services.AddDbContext<AutoservContext>(options =>
+    options.UseSqlServer(connectionString)
+    .UseSnakeCaseNamingConvention()
+    .EnableSensitiveDataLogging(true));
 
 var identityString = builder.Configuration.GetConnectionString("AutoservIdentityConnectionDb");
 

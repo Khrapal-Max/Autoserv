@@ -1,15 +1,23 @@
 ﻿using Infrastructure.Data;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 
 namespace FunctionalTests
 {
-    public class WebAppFactoryTest<TStartup> : WebApplicationFactory<TStartup> where TStartup : class
+    public class WebAppFactoryTest<T> : WebApplicationFactory<T> where T : class
     {
-        private readonly string _connectionString = "Server=(localdb)\\MSSQLLocalDB;Integrated Security=true;Database=Autoserv_test_DB;Trusted_Connection=True;MultipleActiveResultSets=true;";
+        private readonly string _connectionString;
+
+        public WebAppFactoryTest()
+        {
+            var builder = WebApplication.CreateBuilder();
+            _connectionString = builder.Configuration.GetConnectionString("AutoservConnectionTestDb");
+        }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
