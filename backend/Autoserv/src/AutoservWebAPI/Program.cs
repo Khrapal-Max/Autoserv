@@ -57,9 +57,9 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<AutoservIdentityContext>();
+    .AddEntityFrameworkStores<AutoservIdentityContext>(); 
 
 MapperConfiguration mapperConfig = new(mc =>
 {
@@ -81,6 +81,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
+        Description = "CRM system for auto service. AUTOSERV",
         Title = "AutoServ.CRM.WebAPI",
         Version = "v1",
         Contact = new OpenApiContact
@@ -98,6 +99,8 @@ builder.Services.AddScoped<IBaseService<NewBrandDTO, BrandDTO>, BrandService>();
 
 var app = builder.Build();
 
+app.Logger.LogInformation("App created...");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -111,6 +114,25 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.Logger.LogInformation("UserManager started...");
+
+using (var scope = app.Services.CreateScope())
+{
+    var scopedProvider = scope.ServiceProvider;
+    try
+    {
+        var userManager = scopedProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = scopedProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        await AppIdentityDbContextSeed.SeedAsync(userManager, roleManager);
+
+        app.Logger.LogInformation("UserManager completed");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "An error occurred seeding user in the DB.");
+    }
+}
 
 app.Run();
 
